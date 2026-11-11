@@ -265,81 +265,122 @@ namespace UnicodeStringGroup
 /*|||||||||||||||||||||||||||||||||||分割线||||||||||||||||||||||||||||||||||||||||*/
 
 #pragma region Unicode库的有效性检验
-	// 定义自由函数 用于测试 UnicodeString 类的有效性
-	void stdTestCode( )
-	{
-		StrSetConsoleToUTF8( ); // 初始化控制台(跨平台尝试设置 UTF-8 环境)
-		std::cout << "========== 测试开始 ==========\n";
+// 定义自由函数 用于测试 UnicodeString 类的有效性
+void stdTestCode( )
+{
+	StrSetConsoleToUTF8( ); // 初始化控制台(跨平台尝试设置 UTF-8 环境)
+	std::cout << "========== 测试开始 ==========\n";
 
-		// 测试 1: 基础构造与只读接口
-		std::cout << "\n--- 测试 1: 基础构造与只读接口 ---\n";
-		const UnicodeString constStr(u8"你好Hello"); // 测试 const 对象
-		constStr.StrPutOut(ConPutStrAct::NeedEndl); // 应该可以正常输出
-		std::cout << "size() (字节数): " << constStr.size( ) << "\n";
-		std::cout << "length() (字符数): " << constStr.length( ) << "\n";
-		std::cout << "empty(): " << (constStr.empty( ) ? "true" : "false") << "\n";
-		std::cout << "c_str(): " << reinterpret_cast<const char*>(constStr.c_str( )) << "\n";
+	// 测试 1: 基础构造与只读接口
+	std::cout << "\n--- 测试 1: 基础构造与只读接口 ---\n";
+	UnicodeString s1; // 默认构造
+	UnicodeString s2(u8"Hello"); // const char8_t* 构造
+	UnicodeString s3(nullptr); // 空指针构造(安全 应输出空字符)
+	s1.StrPutOut(ConPutStrAct::NeedEndl); // 输出空行
+	s2.StrPutOut(ConPutStrAct::NeedEndl); // 输出 Hello
+	s3.StrPutOut(ConPutStrAct::NotEndl); // 输出空字符 不换行
+	std::cout << "<- (这是空字符的结尾)\n";
 
-		// 测试 2: 拷贝构造与赋值运算符
-		std::cout << "\n--- 测试 2: 拷贝与赋值 ---\n";
-		UnicodeString s2(u8"World");
-		UnicodeString s4(s2); // 拷贝构造
-		s4.StrPutOut(ConPutStrAct::NeedEndl);
-		s2 = u8"直接赋值的C字符串"; // const char8_t* 赋值
-		s2.StrPutOut(ConPutStrAct::NeedEndl);
+	const UnicodeString constStr(u8"你好Hello"); // 测试 const 对象
+	constStr.StrPutOut(ConPutStrAct::NeedEndl); // 应该可以正常输出
+	std::cout << "size() (字节数): " << constStr.size( ) << "\n";
+	std::cout << "length() (字符数): " << constStr.length( ) << "\n";
+	std::cout << "empty(): " << (constStr.empty( ) ? "true" : "false") << "\n";
+	std::cout << "c_str(): " << reinterpret_cast<const char*>(constStr.c_str( )) << "\n";
 
-		// 测试 3: 索引插入(边界与中间)
-		std::cout << "\n--- 测试 3: 索引插入测试 (字符个数) ---\n";
-		UnicodeString s8(u8"ABCDE");
-		std::cout << "原字符串: "; s8.StrPutOut(ConPutStrAct::NeedEndl);
+	// 测试 2: 拷贝构造与赋值运算符
+	std::cout << "\n--- 测试 2: 拷贝与赋值 ---\n";
+	UnicodeString s4(s2); // 拷贝构造
+	s4.StrPutOut(ConPutStrAct::NotEndl); std::cout << " <- 拷贝自 s2\n";
 
-		std::cout << "在字符索引 0 插入 '>>' : ";
-		s8.StrIns(u8">>", 0); // 预期: >>ABCDE
-		s8.StrPutOut(ConPutStrAct::NeedEndl);
+	UnicodeString s5(u8"World");
+	s5 = s2; // UnicodeString 赋值
+	s5.StrPutOut(ConPutStrAct::NotEndl); std::cout << " <- 赋值自 s2\n";
 
-		std::cout << "在字符索引 4 插入 '[]' : ";
-		s8.StrIns(u8"[]", 4); // 预期: >>AB[]CDE
-		s8.StrPutOut(ConPutStrAct::NeedEndl);
+	s5 = u8"直接赋值的C字符串"; // const char8_t* 赋值
+	s5.StrPutOut(ConPutStrAct::NeedEndl);
 
-		// 测试 4: 多字节字符边界与越界测试 (中英文混合)
-		std::cout << "\n--- 测试 4: 多字节字符边界测试 (中英混合) ---\n";
-		UnicodeString s9(u8"A你B好C");
-		std::cout << "原字符串: "; s9.StrPutOut(ConPutStrAct::NeedEndl);
+	// 测试 3: 插入操作 (首尾)
+	std::cout << "\n--- 测试 3: 插入操作 (首尾) ---\n";
+	UnicodeString s6(u8"我恨");
+	s6.StrIns(u8" C++", InsStrPosition::InLast);
+	s6.StrPutOut(ConPutStrAct::NeedEndl); // 预期: 我恨 C++
 
-		// 首部插入
-		std::cout << "在字符索引 0 (首部) 插入 '[首]' : ";
-		s9.StrIns(u8"[首]", 0); // 预期: [首]A你B好C
-		s9.StrPutOut(ConPutStrAct::NeedEndl);
+	UnicodeString s7(u8"语言");
+	s7.StrIns(u8"C++ ", InsStrPosition::InFirst);
+	s7.StrPutOut(ConPutStrAct::NeedEndl); // 预期: C++ 语言
 
-		// 中间插入
-		std::cout << "在字符索引 4 (中间) 插入 '[中]' : ";
-		s9.StrIns(u8"[中]", 4); // 预期: [首]A你[中]B好C
-		s9.StrPutOut(ConPutStrAct::NeedEndl);
+	// 测试 4: 索引插入(边界与中间)
+	std::cout << "\n--- 测试 4: 索引插入测试 (字符个数) ---\n";
+	UnicodeString s8(u8"ABCDE");
+	std::cout << "原字符串: "; s8.StrPutOut(ConPutStrAct::NeedEndl);
 
-		// 越界巨大索引
-		std::cout << "在字符索引 999 (越界) 插入 '[越界]' : ";
-		s9.StrIns(u8"[越界]", 999); // 预期追加到末尾
-		s9.StrPutOut(ConPutStrAct::NeedEndl);
+	std::cout << "在字符索引 0 插入 '>>' : ";
+	s8.StrIns(u8">>", 0); // 预期: >>ABCDE
+	s8.StrPutOut(ConPutStrAct::NeedEndl);
 
-		// 测试 5: 运算符重载 + (拼接)
-		std::cout << "\n--- 测试 5: 字符串拼接与移动 ---\n";
-		UnicodeString a(u8"你好，");
-		UnicodeString b(u8"世界！");
-		a + b;
-		std::cout << "a + b 后: "; a.StrPutOut(ConPutStrAct::NeedEndl);
+	std::cout << "在字符索引 4 插入 '[]' : ";
+	s8.StrIns(u8"[]", 4); // 预期: >>AB[]CDE
+	s8.StrPutOut(ConPutStrAct::NeedEndl);
 
-		UnicodeString src(u8"移动");
-		a.StrObjOwnToMove(src);
+	std::cout << "在字符索引 9 (末尾) 插入 '<<' : ";
+	s8.StrIns(u8"<<", 9); // 预期: >>AB[]CDE<<
+	s8.StrPutOut(ConPutStrAct::NeedEndl);
 
-		// 测试 6: 链式调用
-		std::cout << "\n--- 测试 6: 链式调用 ---\n";
-		UnicodeString chain(u8"链式");
-		chain.StrPutOut_Obj(ConPutStrAct::NotEndl)
-			.StrPutOutOther_Obj(u8" 调用", ConPutStrAct::NotEndl)
-			.StrPutOut_Obj(ConPutStrAct::NeedEndl);
+	// 测试 5: 多字节字符边界与越界测试 (中英文混合)
+	std::cout << "\n--- 测试 5: 多字节字符边界测试 (中英混合) ---\n";
+	UnicodeString s9(u8"A你B好C");
+	std::cout << "原字符串: "; s9.StrPutOut(ConPutStrAct::NeedEndl);
 
-		std::cout << "\n========== 测试结束 ==========\n";
-	}
+	std::cout << "在字符索引 0 (首部) 插入 '[首]' : ";
+	s9.StrIns(u8"[首]", 0); // 预期: [首]A你B好C
+	s9.StrPutOut(ConPutStrAct::NeedEndl);
+
+	std::cout << "在字符索引 4 (中间) 插入 '[中]' : ";
+	s9.StrIns(u8"[中]", 4); // 预期: [首]A你[中]B好C
+	s9.StrPutOut(ConPutStrAct::NeedEndl);
+
+	std::cout << "在字符索引 10 (末尾) 插入 '[尾]' : ";
+	s9.StrIns(u8"[尾]", 10); // 预期: [首]A你[中]B好C[尾]
+	s9.StrPutOut(ConPutStrAct::NeedEndl);
+
+	std::cout << "在字符索引 999 (越界) 插入 '[越界]' : ";
+	s9.StrIns(u8"[越界]", 999); // 预期追加到末尾: [首]A你[中]B好C[尾][越界]
+	s9.StrPutOut(ConPutStrAct::NeedEndl);
+
+	// 测试 6: 运算符重载 + (拼接) 与 移动语义测试
+	std::cout << "\n--- 测试 6: 字符串拼接与移动 ---\n";
+	UnicodeString a(u8"你好，");
+	UnicodeString b(u8"世界！");
+	std::cout << "拼接前 a: "; a.StrPutOut(ConPutStrAct::NeedEndl);
+	std::cout << "拼接前 b: "; b.StrPutOut(ConPutStrAct::NeedEndl);
+
+	a + b;
+	std::cout << "a + b 后的 a: "; a.StrPutOut(ConPutStrAct::NeedEndl);
+
+	UnicodeString src(u8"我要被移动了");
+	UnicodeString dst(u8"目标对象原内容");
+	std::cout << "转移前 dst: "; dst.StrPutOut(ConPutStrAct::NeedEndl);
+
+	dst.StrObjOwnToMove(src); // 转移所有权
+	std::cout << "转移后 dst: "; dst.StrPutOut(ConPutStrAct::NeedEndl);
+	// 注: C++26 版本基于 std::u8string, 移动后源对象是被 clear() 的合法空字符串, 不会像 C++14 版本那样抛出异常.
+	std::cout << "转移后 src (应为空): "; src.StrPutOut(ConPutStrAct::NeedEndl);
+
+	// 测试 7: 链式调用
+	std::cout << "\n--- 测试 7: 链式调用 ---\n";
+	UnicodeString chain(u8"链式");
+	chain.StrPutOut_Obj(ConPutStrAct::NotEndl)
+		.StrPutOutOther_Obj(u8" 调用", ConPutStrAct::NotEndl)
+		.StrPutOut_Obj(ConPutStrAct::NeedEndl);
+
+	// 测试 8: 空指针安全
+	std::cout << "\n--- 测试 8: 空指针输出保护 ---\n";
+	UnicodeString safe(u8"测试输出:");
+	safe.StrPutOut_Obj(ConPutStrAct::NotEndl).StrPutOutOther_Obj(nullptr, ConPutStrAct::NeedEndl); // 不应崩溃
+
+	std::cout << "\n========== 测试结束 ==========\n";
+}
 #pragma endregion
 
 /*|||||||||||||||||||||||||||||||||||分割线||||||||||||||||||||||||||||||||||||||||*/
