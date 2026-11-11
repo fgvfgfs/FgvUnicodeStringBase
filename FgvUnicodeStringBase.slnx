@@ -1,0 +1,8 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="FgvUnicodeStringBase(C++14)/FgvUnicodeStringBase(C++14).vcxproj" />
+  <Project Path="FgvUnicodeStringBase(C++26)/FgvUnicodeStringBase(C++26).vcxproj" />
+</Solution>
