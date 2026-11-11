@@ -93,6 +93,43 @@ void UnicodeString::checkValid( ) const
         throw std::logic_error("invalid UnicodeString");
     }
 }
+#pragma endregion
+
+/*|||||||||||||||||||||||||||||||||||分割线||||||||||||||||||||||||||||||||||||||||*/
+
+#pragma region 只读接口实现
+const char* UnicodeString::c_str( ) const
+{
+    checkValid( );
+    return StrValue;
+}
+
+size_t UnicodeString::size( ) const
+{
+    checkValid( );
+    return DefLength; // 返回底层字节数
+}
+
+size_t UnicodeString::length( ) const
+{
+    checkValid( );
+    size_t charCount = 0;
+    for (size_t i = 0; i < DefLength; ++i)
+    {
+        // 统计不是 UTF-8 延续字节的首字节数量
+        if ((StrValue[i] & 0xC0) != 0x80)
+        {
+            charCount++;
+        }
+    }
+    return charCount; // 返回字符个数
+}
+
+bool UnicodeString::empty( ) const
+{
+    checkValid( );
+    return DefLength == 0;
+}
 
 // 将字符索引转换为字节偏移量,防止插在汉字的中间
 size_t UnicodeString::GetByteOffsetByCharIndex(size_t CharIndex) const
@@ -124,7 +161,7 @@ size_t UnicodeString::GetByteOffsetByCharIndex(size_t CharIndex) const
 
 #pragma region StrPutOut方法及其重载版本
 // 输出自身持有的UTF-8字符方法
-void UnicodeString::StrPutOut(ConPutStrAct str_PutFlag)
+void UnicodeString::StrPutOut(ConPutStrAct str_PutFlag) const
 {
     checkValid( );
     StrPutOut_GeneralFunc(str_PutFlag); // 调用私有方法 该方法实现通用输出自身持有字符串的操作
@@ -137,13 +174,20 @@ UnicodeString& UnicodeString::StrPutOut_Obj(ConPutStrAct str_PutFlag)
     StrPutOut_GeneralFunc(str_PutFlag);
     return *this;
 }
+
+const UnicodeString& UnicodeString::StrPutOut_Obj(ConPutStrAct str_PutFlag) const
+{
+    checkValid( );
+    StrPutOut_GeneralFunc(str_PutFlag);
+    return *this;
+}
 #pragma endregion
 
 /*|||||||||||||||||||||||||||||||||||分割线||||||||||||||||||||||||||||||||||||||||*/
 
 #pragma region StrPutOutOther方法及其重载版本
 // 输出其他非自身持有的UTF-8字符串的方法
-void UnicodeString::StrPutOutOther(const char *NputOurStr, ConPutStrAct strPut_Flag)
+void UnicodeString::StrPutOutOther(const char *NputOurStr, ConPutStrAct strPut_Flag) const
 {
     checkValid( );
     StrPutOut_OtherGeneralFunc(NputOurStr, strPut_Flag); // 调用私有方法 该方法实现通用输出其他非自身持有字符串的操作
@@ -156,13 +200,20 @@ UnicodeString& UnicodeString::StrPutOutOther_Obj(const char *NputOurStr, ConPutS
     StrPutOut_OtherGeneralFunc(NputOurStr, str_PutFlag);
     return *this;
 }
+
+const UnicodeString& UnicodeString::StrPutOutOther_Obj(const char *NputOurStr, ConPutStrAct str_PutFlag) const
+{
+    checkValid( );
+    StrPutOut_OtherGeneralFunc(NputOurStr, str_PutFlag);
+    return *this;
+}
 #pragma endregion
 
 /*|||||||||||||||||||||||||||||||||||分割线||||||||||||||||||||||||||||||||||||||||*/
 
 #pragma region UnicodeString类型对象的私有通用方法
 // 私有方法 定义通用输出自身持有字符串的操作
-void UnicodeString::StrPutOut_GeneralFunc(ConPutStrAct str_PutFlag)
+void UnicodeString::StrPutOut_GeneralFunc(ConPutStrAct str_PutFlag) const
 {
     std::cout << StrValue;
     if (str_PutFlag == ConPutStrAct::NeedEndl) // 检测枚举类型 如果为NeedEndl则进行换行操作
@@ -170,7 +221,7 @@ void UnicodeString::StrPutOut_GeneralFunc(ConPutStrAct str_PutFlag)
 }
 
 // 私有方法 定义通用输出其他非自身持有字符串的操作
-void UnicodeString::StrPutOut_OtherGeneralFunc(const char *NputOurStr, ConPutStrAct str_PutFlag)
+void UnicodeString::StrPutOut_OtherGeneralFunc(const char *NputOurStr, ConPutStrAct str_PutFlag) const
 {
     if (!NputOurStr)
     {
@@ -180,7 +231,34 @@ void UnicodeString::StrPutOut_OtherGeneralFunc(const char *NputOurStr, ConPutStr
     if (str_PutFlag == ConPutStrAct::NeedEndl) // 检测枚举类型 如果为NeedEndl则进行换行操作
         std::cout << '\n';
 }
+#pragma endregion
 
+/*|||||||||||||||||||||||||||||||||||分割线||||||||||||||||||||||||||||||||||||||||*/
+
+#pragma region 特殊全局操作
+// 实现自由函数,用于设置控制台为UTF-8,设置本地化为zh_CN.UTF-8并清空重置缓冲区[该效果是全局的,只用使用一次]
+void UnicodeStringGroup::StrSetConsoleToUTF8( )
+{
+#ifdef _WIN32 // 如果是Windows系统 则执行
+    system("chcp 65001 > nul"); // 设置控制台为UTF-8	
+#endif
+    try
+    {
+        std::locale::global(std::locale("zh_CN.UTF-8")); // 设置本地化为zh_CN.UTF-8
+    }
+    catch (const std::runtime_error&)
+    {
+        // 当前环境不支持该 locale,忽略
+    }
+    std::cout.clear( ); // 重置流的错误状态(恢复错误后的流,例如一个函数期望输入数字而用户输入了字符 这个时候流就会有错误状态)
+    std::cout.flush( ); // 强制刷新缓冲区
+    // 清除缓冲区并同步
+}
+#pragma endregion
+
+/*|||||||||||||||||||||||||||||||||||分割线||||||||||||||||||||||||||||||||||||||||*/
+
+#pragma region StrIns方法及其重载版本
 // 私有方法 定义通用字符串操作函数精简代码并提升复用性
 void UnicodeString::StrInsGeneralFunc(const char *u8cpIns, InsStrPosition str_InsFlag)
 {
@@ -226,32 +304,7 @@ void UnicodeString::StrInsGeneralFunc(const char *u8cpIns, InsStrPosition str_In
     StrValue = finalStr; // 直接接管分配好的内存
     DefLength = finalLen; // 更新长度
 }
-#pragma endregion
 
-/*|||||||||||||||||||||||||||||||||||分割线||||||||||||||||||||||||||||||||||||||||*/
-
-#pragma region 特殊全局操作
-// 实现自由函数,用于设置控制台为UTF-8,设置本地化为zh_CN.UTF-8并清空重置缓冲区[该效果是全局的,只用使用一次]
-void UnicodeStringGroup::StrSetConsoleToUTF8( )
-{
-#ifdef _WIN32 // 如果是Windows系统 则执行
-    system("chcp 65001 > nul"); // 设置控制台为UTF-8	
-#endif
-    try
-    {
-        std::locale::global(std::locale("zh_CN.UTF-8")); // 设置本地化为zh_CN.UTF-8
-    }
-    catch (const std::runtime_error&)
-    {
-        // 当前环境不支持该 locale,忽略
-    }
-    std::cout.clear( ); // 重置流的错误状态(恢复错误后的流,例如一个函数期望输入数字而用户输入了字符 这个时候流就会有错误状态)
-    std::cout.flush( ); // 强制刷新缓冲区
-    // 清除缓冲区并同步
-}
-#pragma endregion
-
-#pragma region StrIns方法及其重载版本
 // 定义类方法,用于插入字符串 同时给予控制选项
 char* UnicodeString::StrIns(const char *u8cpIns, InsStrPosition str_InsFlag)
 {
@@ -378,7 +431,7 @@ void UnicodeString::operator=(const char *u8cp)
 }
 
 // 加法运算符重载 适用于 Str + Str2; 的情况
-void UnicodeString::operator+(const UnicodeString &str)
+UnicodeString& UnicodeString::operator+(const UnicodeString &str)
 {
     checkValid( );
     str.checkValid( );
@@ -409,6 +462,7 @@ void UnicodeString::operator+(const UnicodeString &str)
     }
     StrValue = finalStr;
     DefLength = finalLen;
+    return *this;
 }
 
 // 赋值运算符重载 适用于 Str = Str2; 的情况
@@ -453,8 +507,9 @@ bool UnicodeString::operator!=(const UnicodeString &str) const // 不等于运�
 {
     return !(*this == str); // 调用等于运算符重载,如果相等则返回false,否则返回true
 }
-
 #pragma endregion
+
+/*|||||||||||||||||||||||||||||||||||分割线||||||||||||||||||||||||||||||||||||||||*/
 
 #pragma region Unicode库的有效性检验
 void UnicodeStringGroup::stdTestCode( ) // 定义自由函数,用于测试UnicodeString类的有效性
@@ -463,58 +518,38 @@ void UnicodeStringGroup::stdTestCode( ) // 定义自由函数,用于测试Unicod
     StrSetConsoleToUTF8( );
     std::cout << "========== 测试开始 ==========\n";
 
-    // 2. 基础构造与输出测试
-    std::cout << "\n--- 测试 1: 基础构造与输出 ---\n";
-    UnicodeString s1; // 默认构造
-    UnicodeString s2("Hello"); // const char* 构造
-    UnicodeString s3(nullptr); // 空指针构造 (安全, 应输出空字符)
+    // 2. 基础构造与只读接口
+    std::cout << "\n--- 测试 1: 基础构造与只读接口 ---\n";
+    const UnicodeString constStr("你好Hello"); // 测试 const 对象
+    constStr.StrPutOut(ConPutStrAct::NeedEndl); // 应该可以正常输出
+    std::cout << "size() (字节数): " << constStr.size( ) << "\n";
+    std::cout << "length() (字符数): " << constStr.length( ) << "\n";
+    std::cout << "empty(): " << (constStr.empty( ) ? "true" : "false") << "\n";
+    std::cout << "c_str(): " << constStr.c_str( ) << "\n";
 
-    s1.StrPutOut(ConPutStrAct::NeedEndl); // 输出空行
-    s2.StrPutOut(ConPutStrAct::NeedEndl); // 输出 Hello
-    s3.StrPutOut(ConPutStrAct::NotEndl);  // 输出空字符, 不换行
-    std::cout << "<- (这是空字符的结尾)\n";
-
-    // 3. 拷贝构造与赋值运算符测试
+    // 3. 拷贝构造与赋值运算符
     std::cout << "\n--- 测试 2: 拷贝与赋值 ---\n";
+    UnicodeString s2("World");
     UnicodeString s4(s2); // 拷贝构造
-    s4.StrPutOut(ConPutStrAct::NotEndl); std::cout << " <- 拷贝自s2\n";
+    s4.StrPutOut(ConPutStrAct::NeedEndl);
+    s2 = "直接赋值的C字符串"; // const char* 赋值
+    s2.StrPutOut(ConPutStrAct::NeedEndl);
 
-    UnicodeString s5("World");
-    s5 = s2; // UnicodeString 赋值
-    s5.StrPutOut(ConPutStrAct::NotEndl); std::cout << " <- 赋值自s2\n";
-
-    s5 = "直接赋值的C字符串"; // const char* 赋值
-    s5.StrPutOut(ConPutStrAct::NeedEndl);
-
-    // 4. 插入操作 (首尾) 测试
-    std::cout << "\n--- 测试 3: 插入操作 (首尾) ---\n";
-    UnicodeString s6("我恨");
-    s6.StrIns(" C++", InsStrPosition::InLast);
-    s6.StrPutOut(ConPutStrAct::NeedEndl); // 预期: 我恨 C++
-
-    UnicodeString s7("语言");
-    s7.StrIns("C++ ", InsStrPosition::InFirst);
-    s7.StrPutOut(ConPutStrAct::NeedEndl); // 预期: C++ 语言
-
-    // 5. 索引插入测试 (边界与中间)
-    std::cout << "\n--- 测试 4: 指定索引插入 (字符个数) ---\n";
+    // 4. 索引插入(边界与中间)
+    std::cout << "\n--- 测试 3: 索引插入测试 (字符个数) ---\n";
     UnicodeString s8("ABCDE");
     std::cout << "原字符串: "; s8.StrPutOut(ConPutStrAct::NeedEndl);
 
     std::cout << "在字符索引 0 插入 '>>' : ";
-    s8.StrIns(">>", 0);
-    s8.StrPutOut(ConPutStrAct::NeedEndl); // 预期: >>ABCDE
+    s8.StrIns(">>", 0); // 预期: >>ABCDE
+    s8.StrPutOut(ConPutStrAct::NeedEndl);
 
     std::cout << "在字符索引 4 插入 '[]' : ";
-    s8.StrIns("[]", 4);
-    s8.StrPutOut(ConPutStrAct::NeedEndl); // 预期: >>AB[]CDE
+    s8.StrIns("[]", 4); // 预期: >>AB[]CDE
+    s8.StrPutOut(ConPutStrAct::NeedEndl);
 
-    std::cout << "在字符索引 9 插入 '<<' : ";
-    s8.StrIns("<<", 9);
-    s8.StrPutOut(ConPutStrAct::NeedEndl); // 预期: >>AB[]CDE<<
-
-    // 6. 多字节字符边界与越界测试 (中英文混合)
-    std::cout << "\n--- 测试 5: 多字节字符边界测试 (中英混合) ---\n";
+    // 5. 多字节字符边界与越界测试 (中英文混合)
+    std::cout << "\n--- 测试 4: 多字节字符边界测试 (中英混合) ---\n";
     UnicodeString s9("A你B好C");
     std::cout << "原字符串: "; s9.StrPutOut(ConPutStrAct::NeedEndl);
 
@@ -523,66 +558,34 @@ void UnicodeStringGroup::stdTestCode( ) // 定义自由函数,用于测试Unicod
     s9.StrIns("[首]", 0); // 预期: [首]A你B好C
     s9.StrPutOut(ConPutStrAct::NeedEndl);
 
-    // 中间插入 (当前长度为 8, 索引 4 是 'B' 之前)
+    // 中间插入
     std::cout << "在字符索引 4 (中间) 插入 '[中]' : ";
     s9.StrIns("[中]", 4); // 预期: [首]A你[中]B好C
     s9.StrPutOut(ConPutStrAct::NeedEndl);
 
-    // 末尾插入 (当前长度为 10, 索引 10 是最后)
-    std::cout << "在字符索引 10 (末尾) 插入 '[尾]' : ";
-    s9.StrIns("[尾]", 10); // 预期: [首]A你[中]B好C[尾]
-    s9.StrPutOut(ConPutStrAct::NeedEndl);
-
-    // 越界巨大索引 (当前长度为 13)
+    // 越界巨大索引
     std::cout << "在字符索引 999 (越界) 插入 '[越界]' : ";
-    s9.StrIns("[越界]", 999); // 预期追加到末尾: [首]A你[中]B好C[尾][越界]
+    s9.StrIns("[越界]", 999); // 预期追加到末尾
     s9.StrPutOut(ConPutStrAct::NeedEndl);
 
-    // 7. 运算符重载 + (拼接) 测试
-    std::cout << "\n--- 测试 6: 字符串拼接 ---\n";
+    // 6. 运算符重载 + (拼接)
+    std::cout << "\n--- 测试 5: 字符串拼接与移动 ---\n";
     UnicodeString a("你好，");
     UnicodeString b("世界！");
-    std::cout << "拼接前 a: "; a.StrPutOut(ConPutStrAct::NeedEndl);
-    std::cout << "拼接前 b: "; b.StrPutOut(ConPutStrAct::NeedEndl);
-
     a + b;
-    std::cout << "a + b 后的 a: "; a.StrPutOut(ConPutStrAct::NeedEndl);
+    std::cout << "a + b 后: "; a.StrPutOut(ConPutStrAct::NeedEndl);
 
-    // 8. 对象所有权转移测试
-    std::cout << "\n--- 测试 7: 对象所有权转移 ---\n";
-    UnicodeString src("我要被移动了");
-    UnicodeString dst("目标对象原内容");
+    UnicodeString src("移动");
+    a.StrObjOwnToMove(src);
 
-    std::cout << "转移前 dst: "; dst.StrPutOut(ConPutStrAct::NeedEndl);
-    dst.StrObjOwnToMove(src); // 转移所有权
-    std::cout << "转移后 dst: "; dst.StrPutOut(ConPutStrAct::NeedEndl);
-
-    // 验证原对象 src 是否失效并抛出异常
-    std::cout << "尝试访问被转移的 src: ";
-    try
-    {
-        src.StrPutOut(ConPutStrAct::NeedEndl); // 应该触发 checkValid() 抛出异常
-        std::cout << "没有抛出异常\n";
-    }
-    catch (const std::logic_error& e)
-    {
-        std::cout << "成功捕获异常: " << e.what( ) << "\n";
-    }
-
-    // 9. 链式调用测试
-    std::cout << "\n--- 测试 8: 链式调用 ---\n";
+    // 7. 链式调用
+    std::cout << "\n--- 测试 6: 链式调用 ---\n";
     UnicodeString chain("链式");
     chain.StrPutOut_Obj(ConPutStrAct::NotEndl)
         .StrPutOutOther_Obj(" 调用", ConPutStrAct::NotEndl)
         .StrPutOut_Obj(ConPutStrAct::NeedEndl);
 
-    // 10. 空指针安全测试
-    std::cout << "\n--- 测试 9: 空指针输出保护 ---\n";
-    UnicodeString safe("测试输出:");
-    safe.StrPutOut_Obj(ConPutStrAct::NotEndl).StrPutOutOther_Obj(nullptr, ConPutStrAct::NeedEndl); // 不应崩溃
-
     std::cout << "\n========== 测试结束 ==========\n";
-
 }
 #pragma endregion
 

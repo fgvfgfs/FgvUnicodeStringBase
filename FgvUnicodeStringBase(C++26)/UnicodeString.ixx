@@ -24,16 +24,27 @@ export namespace UnicodeStringGroup
 		UnicodeString(const UnicodeString &copy) = default; // 拷贝构造函数
 		UnicodeString& operator=(const UnicodeString &str) = default; // 赋值运算符重载
 
-		void StrPutOut(ConPutStrAct str_PutFlag = ConPutStrAct::NeedEndl); // 定义类方法, 用于输出自身拥有的UTF-8字符, 同时给予控制是否换行选项
-		void StrPutOutOther(const char8_t *NputOurStr, ConPutStrAct str_PutFlag = ConPutStrAct::NeedEndl); // 定义类方法, 用于输出其他的UTF-8字符
-		UnicodeString& StrPutOut_Obj(ConPutStrAct str_PutFlag = ConPutStrAct::NeedEndl); // 专用于链式调用的类成员方法, 用于输出自身拥有的UTF-8字符
-		UnicodeString& StrPutOutOther_Obj(const char8_t *NputOurStr, ConPutStrAct str_PutFlag = ConPutStrAct::NeedEndl); // 专用于链式调用的类成员方法, 用于输出其他的UTF-8字符
+		// --- 只读接口 ---
+		const char8_t* c_str( ) const; // 获取底层C风格字符串指针
+		size_t size( ) const; // 获取当前字节数
+		size_t length( ) const; // 获取当前字符个数
+		bool empty( ) const; // 判断字符串是否为空
+		// ---------------
+
+		void StrPutOut(ConPutStrAct str_PutFlag = ConPutStrAct::NeedEndl) const; // 定义类方法, 用于输出自身拥有的UTF-8字符, 同时给予控制是否换行选项
+		void StrPutOutOther(const char8_t *NputOurStr, ConPutStrAct str_PutFlag = ConPutStrAct::NeedEndl) const; // 定义类方法, 用于输出其他的UTF-8字符
+
+		UnicodeString& StrPutOut_Obj(ConPutStrAct str_PutFlag = ConPutStrAct::NeedEndl);
+		const UnicodeString& StrPutOut_Obj(ConPutStrAct str_PutFlag = ConPutStrAct::NeedEndl) const;
+
+		UnicodeString& StrPutOutOther_Obj(const char8_t *NputOurStr, ConPutStrAct str_PutFlag = ConPutStrAct::NeedEndl);
+		const UnicodeString& StrPutOutOther_Obj(const char8_t *NputOurStr, ConPutStrAct str_PutFlag = ConPutStrAct::NeedEndl) const;
 
 		// 其实C/C++应该叫做函数, 但是咱C#写习惯了 所以就习惯叫成为 方法 了
 		const char8_t* StrIns(const char8_t *u8cpIns, InsStrPosition str_InsFlag = InsStrPosition::InLast); // 定义类方法, 用于插入字符串 同时给予控制选项
 		UnicodeString& StrInsAndCopy(const char8_t *u8cpIns, InsStrPosition str_InsFlag = InsStrPosition::InLast); // 插入并复制字符串对象[不会修改源字符串, 这是深拷贝]
 		void operator=(const char8_t *u8cp); // 赋值运算符重载 适用于 Str = u8"我是新字符串"; 的情况
-		void operator+(const UnicodeString &str); // 加法运算符重载 适用于 Str + Str2; 的情况
+		UnicodeString& operator+(const UnicodeString &str); // 加法运算符重载 适用于 Str + Str2; 的情况
 		bool operator==(const UnicodeString &str) const; // 等于运算符重载
 		bool operator!=(const UnicodeString &str) const; // 不等于运算符重载
 		UnicodeString& StrObjOwnToMove(UnicodeString &NeedMovestr); // 定义类方法 用于转移对象所有权
@@ -44,8 +55,8 @@ export namespace UnicodeStringGroup
 		std::u8string StrValue = u8""; // 底层使用 std::u8string 存储, 自动管理内存
 		ConPutStrAct Str_PutFlag = ConPutStrAct::NotEndl; // 默认为不需要换行
 
-		void StrPutOut_GeneralFunc(ConPutStrAct str_PutFlag = ConPutStrAct::NeedEndl); // 私有方法 定义通用输出自身持有字符串的操作
-		void StrPutOut_OtherGeneralFunc(const char8_t *NputOurStr, ConPutStrAct str_PutFlag = ConPutStrAct::NeedEndl); // 私有方法 定义通用输出其他非自身持有字符串的操作
+		void StrPutOut_GeneralFunc(ConPutStrAct str_PutFlag = ConPutStrAct::NeedEndl) const; // 私有方法 定义通用输出自身持有字符串的操作
+		void StrPutOut_OtherGeneralFunc(const char8_t *NputOurStr, ConPutStrAct str_PutFlag = ConPutStrAct::NeedEndl) const; // 私有方法 定义通用输出其他非自身持有字符串的操作
 		void StrInsGeneralFunc(const char8_t *u8cpIns, InsStrPosition str_InsFlag = InsStrPosition::InLast); // 私有方法 定义通用字符串操作函数
 		size_t GetByteOffsetByCharIndex(size_t CharIndex) const; // 私有方法 将字符索引转换为字节偏移量
 	};

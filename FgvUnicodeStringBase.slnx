@@ -6,6 +6,6 @@
   <Folder Name="/解决方案项/">
     <File Path="README.md" />
   </Folder>
-  <Project Path="FgvUnicodeStringBase(C++14)/FgvUnicodeStringBase(C++14).vcxproj" />
-  <Project Path="FgvUnicodeStringBase(C++26)/FgvUnicodeStringBase(C++26).vcxproj" />
+  <Project Path="FgvUnicodeStringBase(C++14)/FgvUnicodeStringBase(C++14).vcxproj" Id="c3730837-43d1-484f-bcfe-abd8c2937ebe" />
+  <Project Path="FgvUnicodeStringBase(C++26)/FgvUnicodeStringBase(C++26).vcxproj" Id="572ef532-6d8b-4682-a22c-522350f0c17a" />
 </Solution>
