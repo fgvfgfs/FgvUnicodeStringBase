@@ -3,6 +3,9 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
+  <Folder Name="/解决方案项/">
+    <File Path="README.md" />
+  </Folder>
   <Project Path="FgvUnicodeStringBase(C++14)/FgvUnicodeStringBase(C++14).vcxproj" />
   <Project Path="FgvUnicodeStringBase(C++26)/FgvUnicodeStringBase(C++26).vcxproj" />
 </Solution>
